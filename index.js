@@ -21,7 +21,6 @@ client.once('ready', () => {
   console.log(`البوت اشتغل: ${client.user.tag}`);
 });
 
-// أمر إنشاء لوحة التذاكر
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
@@ -42,11 +41,9 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-// أزرار التذاكر
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
 
-  // فتح تذكرة
   if (interaction.customId === 'open_ticket') {
     const existingChannel = interaction.guild.channels.cache.find(
       channel => channel.name === `ticket-${interaction.user.id}`
@@ -59,32 +56,51 @@ client.on('interactionCreate', async (interaction) => {
       });
     }
 
+    // البحث عن رتبة Support
+    const supportRole = interaction.guild.roles.cache.find(
+      role => role.name === 'Support'
+    );
+
+    const permissions = [
+      {
+        id: interaction.guild.roles.everyone.id,
+        deny: [PermissionsBitField.Flags.ViewChannel]
+      },
+      {
+        id: interaction.user.id,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory
+        ]
+      },
+      {
+        id: client.user.id,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory,
+          PermissionsBitField.Flags.ManageChannels
+        ]
+      }
+    ];
+
+    // إعطاء Support صلاحية دخول التذكرة
+    if (supportRole) {
+      permissions.push({
+        id: supportRole.id,
+        allow: [
+          PermissionsBitField.Flags.ViewChannel,
+          PermissionsBitField.Flags.SendMessages,
+          PermissionsBitField.Flags.ReadMessageHistory
+        ]
+      });
+    }
+
     const channel = await interaction.guild.channels.create({
       name: `ticket-${interaction.user.id}`,
       type: ChannelType.GuildText,
-      permissionOverwrites: [
-        {
-          id: interaction.guild.roles.everyone.id,
-          deny: [PermissionsBitField.Flags.ViewChannel]
-        },
-        {
-          id: interaction.user.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages,
-            PermissionsBitField.Flags.ReadMessageHistory
-          ]
-        },
-        {
-          id: client.user.id,
-          allow: [
-            PermissionsBitField.Flags.ViewChannel,
-            PermissionsBitField.Flags.SendMessages,
-            PermissionsBitField.Flags.ReadMessageHistory,
-            PermissionsBitField.Flags.ManageChannels
-          ]
-        }
-      ]
+      permissionOverwrites: permissions
     });
 
     const closeButton = new ButtonBuilder()
@@ -105,7 +121,6 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 
-  // إغلاق التذكرة
   if (interaction.customId === 'close_ticket') {
     await interaction.reply('🔒 سيتم إغلاق التذكرة خلال 3 ثواني...');
 
