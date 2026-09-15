@@ -94,4 +94,8 @@ client.on('interactionCreate', async (interaction) => {
   );
 });
 
+client.on('messageCreate', message => {
+  console.log(`وصلت رسالة: ${message.content}`);
+});
+
 client.login(process.env.DISCORD_TOKEN);
