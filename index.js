@@ -24,8 +24,6 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
-  console.log(`وصلت رسالة: ${message.content}`);
-
   if (message.content === '!ticket') {
     const button = new ButtonBuilder()
       .setCustomId('open_ticket')
@@ -45,6 +43,7 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
 
   if (interaction.customId === 'open_ticket') {
+
     const existingChannel = interaction.guild.channels.cache.find(
       channel => channel.name === `ticket-${interaction.user.id}`
     );
@@ -56,51 +55,53 @@ client.on('interactionCreate', async (interaction) => {
       });
     }
 
-    // البحث عن رتبة Support
     const supportRole = interaction.guild.roles.cache.find(
-      role => role.name === 'Support'
+      role => role.name.toLowerCase() === 'support'
     );
 
-    const permissions = [
-      {
-        id: interaction.guild.roles.everyone.id,
-        deny: [PermissionsBitField.Flags.ViewChannel]
-      },
-      {
-        id: interaction.user.id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory
-        ]
-      },
-      {
-        id: client.user.id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory,
-          PermissionsBitField.Flags.ManageChannels
-        ]
-      }
-    ];
-
-    // إعطاء Support صلاحية دخول التذكرة
-    if (supportRole) {
-      permissions.push({
-        id: supportRole.id,
-        allow: [
-          PermissionsBitField.Flags.ViewChannel,
-          PermissionsBitField.Flags.SendMessages,
-          PermissionsBitField.Flags.ReadMessageHistory
-        ]
+    if (!supportRole) {
+      return interaction.reply({
+        content: '❌ ما لقيت رتبة Support في السيرفر.',
+        ephemeral: true
       });
     }
 
     const channel = await interaction.guild.channels.create({
       name: `ticket-${interaction.user.id}`,
       type: ChannelType.GuildText,
-      permissionOverwrites: permissions
+      permissionOverwrites: [
+        {
+          id: interaction.guild.roles.everyone.id,
+          deny: [PermissionsBitField.Flags.ViewChannel]
+        },
+        {
+          id: interaction.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory
+          ]
+        },
+        {
+          id: supportRole.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory,
+            PermissionsBitField.Flags.ManageMessages
+          ]
+        },
+        {
+          id: client.user.id,
+          allow: [
+            PermissionsBitField.Flags.ViewChannel,
+            PermissionsBitField.Flags.SendMessages,
+            PermissionsBitField.Flags.ReadMessageHistory,
+            PermissionsBitField.Flags.ManageChannels,
+            PermissionsBitField.Flags.ManageMessages
+          ]
+        }
+      ]
     });
 
     const closeButton = new ButtonBuilder()
