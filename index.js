@@ -5,8 +5,10 @@ const {
   ButtonBuilder,
   ButtonStyle,
   ChannelType,
-  PermissionsBitField
+  PermissionsBitField,
+  AttachmentBuilder
 } = require('discord.js');
+const path = require('path');
 
 const client = new Client({
   intents: [
@@ -21,6 +23,27 @@ client.once('ready', () => {
   console.log(`البوت اشتغل: ${client.user.tag}`);
 });
 
+// الترحيب عند دخول عضو جديد
+client.on('guildMemberAdd', async (member) => {
+  const welcomeChannel = member.guild.channels.cache.find(
+    channel => channel.name === 'welcome-👋'
+  );
+
+  if (!welcomeChannel) {
+    console.log('ما لقيت روم welcome-👋');
+    return;
+  }
+
+  const imagePath = path.join(__dirname, 'welcome.png');
+  const attachment = new AttachmentBuilder(imagePath);
+
+  await welcomeChannel.send({
+    content: `👋 **حياك الله ${member} في السيرفر!**\nنتمنى لك وقت ممتع معنا ❤️`,
+    files: [attachment]
+  });
+});
+
+// أمر التذاكر
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
@@ -43,7 +66,6 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isButton()) return;
 
   if (interaction.customId === 'open_ticket') {
-
     const existingChannel = interaction.guild.channels.cache.find(
       channel => channel.name === `ticket-${interaction.user.id}`
     );
