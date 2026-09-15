@@ -26,7 +26,7 @@ client.once('ready', () => {
 // الترحيب عند دخول عضو جديد
 client.on('guildMemberAdd', async (member) => {
   const welcomeChannel = member.guild.channels.cache.find(
-    channel =>  channel.name === 'welcome-👋'
+    channel =>  channel.name === 'welcome'
   );
 
   if (!welcomeChannel) {
